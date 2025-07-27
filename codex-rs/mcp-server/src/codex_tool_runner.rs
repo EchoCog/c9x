@@ -25,6 +25,7 @@ use tokio::sync::Mutex;
 use uuid::Uuid;
 
 use crate::exec_approval::handle_exec_approval_request;
+use crate::outgoing_message::OutgoingEventContext;
 use crate::outgoing_message::OutgoingMessageSender;
 use crate::patch_approval::handle_patch_approval_request;
 
@@ -65,8 +66,15 @@ pub async fn run_codex_tool_session(
     session_map.lock().await.insert(session_id, codex.clone());
     drop(session_map);
 
-    // Send initial SessionConfigured event.
-    outgoing.send_event_as_notification(&first_event).await;
+    // Send initial SessionConfigured event, and include the request id
+    outgoing
+        .send_event_as_notification(
+            &first_event,
+            Some(OutgoingEventContext {
+                request_id: id.clone(),
+            }),
+        )
+        .await;
 
     // Use the original MCP request ID as the `sub_id` for the Codex submission so that
     // any events emitted for this tool-call can be correlated with the
@@ -150,7 +158,14 @@ async fn run_codex_tool_session_inner(
     loop {
         match codex.next_event().await {
             Ok(event) => {
-                outgoing.send_event_as_notification(&event).await;
+                outgoing
+                    .send_event_as_notification(
+                        &event,
+                        Some(OutgoingEventContext {
+                            request_id: request_id.clone(),
+                        }),
+                    )
+                    .await;
 
                 match event.msg {
                     EventMsg::ExecApprovalRequest(ExecApprovalRequestEvent {
