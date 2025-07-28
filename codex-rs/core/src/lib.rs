@@ -41,5 +41,6 @@ mod safety;
 pub mod shell;
 mod user_notification;
 pub mod util;
+pub mod yaml_prompt;
 
 pub use client_common::model_supports_reasoning_summaries;
