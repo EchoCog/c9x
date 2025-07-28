@@ -67,6 +67,13 @@ enum Subcommand {
     Apply(ApplyCommand),
 
     /// Execute YAML prompt file on input files (Deep Tree Echo functionality).
+    /// 
+    /// Loads a YAML prompt file and applies it to the specified input files.
+    /// The input files' content is combined and substituted into the {{input}} 
+    /// template variable in the prompt. This enables the Deep Tree Echo Core
+    /// Engine to perform structured analysis and reasoning on the provided files.
+    ///
+    /// Example: codex dtecho file1.md file2.md
     #[clap(visible_alias = "dt")]
     Dtecho(DtechoCommand),
 }
@@ -102,10 +109,16 @@ struct LoginCommand {
 #[derive(Debug, Parser)]
 struct DtechoCommand {
     /// Path to the YAML prompt file (defaults to echo-tree.prompt.yml)
+    /// 
+    /// The YAML file should contain 'messages' array and optional 'model' field.
+    /// Template variables like {{input}} will be substituted with input file content.
     #[clap(short, long, default_value = "echo-tree.prompt.yml")]
     prompt_file: PathBuf,
 
     /// Input files to process
+    /// 
+    /// All specified files will be read and their content combined into the
+    /// {{input}} template variable for processing by the YAML prompt.
     input_files: Vec<PathBuf>,
 
     #[clap(flatten)]
